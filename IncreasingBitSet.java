@@ -114,5 +114,14 @@ public class IncreasingBitSet implements Serializable, Cloneable
 	{
 		return prefix;
 	}
+
+	public IncreasingBitSet clone() throws CloneNotSupportedException
+	{
+		IncreasingBitSet object = (IncreasingBitSet)( super.clone() );
+		object.prefix = prefix;
+		object.truncated = truncated;
+		object.bitset = (BitSet)( bitset.clone() );
+		return object;
+	}
 }
 
