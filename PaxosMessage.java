@@ -17,6 +17,7 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 	private Type type = Type.NONE;
 	private Long proposalNumber = null;
 	private PaxosValue value = null;
+	private Long highestAcceptedNumber = null;
 	private Long round = null;
 
 	public PaxosMessage()
@@ -59,10 +60,21 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 		return round;
 	}
 
-	public void setRound( Long rount )
+	public void setRound( Long round )
 	{
 		this.round = round;
 	}
+
+	public Long getHighestAcceptedNumber()
+	{
+		return highestAcceptedNumber;
+	}
+
+	public void setHighestAcceptedNumber( Long n )
+	{
+		highestAcceptedNumber = n;
+	}
+
 
 	public int compareTo( PaxosMessage other )
 	{
