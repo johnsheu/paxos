@@ -16,10 +16,10 @@ public class PaxosSM
 	//proposer variables
 
 	//acceptor variables
-	PaxosValue highestProposalAcceptedValue = null;
-	Long highestProposalAccepted = null;
+	HashMap<Long, PaxosValue> highestProposalAcceptedValueMap = null;
+	HashMap<Long, Long> highestProposalAcceptedMap = null;
 
-	Long highestPrepareResp = null;
+	HashMap<Long, Long> highestPrepareRespMap = null;
 
 
 	//learner variables
@@ -27,6 +27,10 @@ public class PaxosSM
 	public PaxosSM()
 	{
 		clear();
+		highestProposalAcceptedValueMap = new HashMap<Long, PaxosValue>();
+		highestProposalAcceptedMap = new HashMap<Long, Long>();
+
+		highestPrepareRespMap = new HashMap<Long, Long>();
 	}
 
 	public void clear()
@@ -57,10 +61,12 @@ public class PaxosSM
 	public void processMessage( PaxosMessage msg )
 	{
 		PaxosMessage.Type type = msg.getType();		
-		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > highestPrepareResp )
+		Long round = msg.getRound();
+
+		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > highestPrepareRespMap.get(round) )
 		{
-		    msg.setValue( highestProposalAcceptedValue );
-		    highestPrepareResp = msg.getProposalNumber();
+		    msg.setValue( highestProposalAcceptedValueMap.get(round) );
+		    highestPrepareRespMap.put( round, msg.getProposalNumber() );
 		    msg.setType( PaxosMessage.Type.PREP_RESP );
 		    //send back msg
 		}
@@ -70,10 +76,10 @@ public class PaxosSM
 		    
 		    //if majority has responded, send out accept message
 		}
-		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > highestPrepareResp )
+		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > highestPrepareRespMap.get(round) )
 		{
-		    highestProposalAccepted = msg.getProposalNumber();
-		    highestProposalAcceptedValue = msg.getValue();
+		    highestProposalAcceptedMap.put( round, msg.getProposalNumber() );
+		    highestProposalAcceptedValueMap.put( round, msg.getValue() );
 		    msg.setType( PaxosMessage.Type.ACC_INF );
 		    //send message to distinguished learner
 		}
