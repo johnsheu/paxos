@@ -17,6 +17,7 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 	private Type type = Type.NONE;
 	private Long proposalNumber = null;
 	private PaxosValue value = null;
+	private Long round = null;
 
 	public PaxosMessage()
 	{
@@ -51,6 +52,16 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 	public void setValue( PaxosValue v )
 	{
 		this.value = v;
+	}
+
+	public Long getRound()
+	{
+		return round;
+	}
+
+	public void setRound( Long rount )
+	{
+		this.round = round;
 	}
 
 	public int compareTo( PaxosMessage other )
