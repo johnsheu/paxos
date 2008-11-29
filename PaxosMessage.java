@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class PaxosMessage extends Message implements Serializable
+public class PaxosMessage extends Message implements Serializable, Comparable<PaxosMessage>
 {
 	private static final long serialVersionUID = 1L;
 
@@ -15,6 +15,8 @@ public class PaxosMessage extends Message implements Serializable
 	}
 
 	private Type type = Type.NONE;
+	private Long proposalNumber = null;
+	private PaxosValue value = null;
 
 	public PaxosMessage()
 	{
@@ -29,6 +31,41 @@ public class PaxosMessage extends Message implements Serializable
 	public void setType( Type type )
 	{
 		this.type = type;
+	}
+
+	public Long getProposalNumber()
+	{
+		return proposalNumber;
+	}
+
+	public void setProposalNumber( Long n )
+	{
+		this.proposalNumber = n;
+	}
+
+	public PaxosValue getValue()
+	{
+		return value;
+	}
+
+	public void setValue( PaxosValue v )
+	{
+		this.value = v;
+	}
+
+	public int compareTo( PaxosMessage other )
+	{
+		if( this == other )
+			return 0;
+
+		else if( this.proposalNumber < other.proposalNumber )
+			return -1;
+
+		else if( this.proposalNumber > other.proposalNumber )
+			return 1;
+
+		else 
+			return 0;
 	}
 }
 
