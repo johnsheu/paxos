@@ -4,54 +4,26 @@ public class ClientMessage extends Message implements Serializable
 {
 	private static final long serialVersionUID = 1L;
 
-	public enum Type
-	{
-		NONE,
-		ADD,
-		EDIT,
-		DELETE,
-		READ,
-	}
-
-	private Type type = Type.NONE;
-
-	private String key = "";
-
-	private String value = "";
+	private PaxosValue value = null;
 
 	public ClientMessage()
 	{
-		
+
 	}
 
-	public Type getType()
-	{
-		return type;
-	}
-
-	public void setType( Type type )
-	{
-		this.type = type;
-	}
-
-	public String getKey()
-	{
-		return key;
-	}
-
-	public void setKey( String key )
-	{
-		this.key = key;
-	}
-
-	public String getValue()
-	{
-		return value;
-	}
-
-	public void setValue( String value )
+	public ClientMessage( PaxosValue value )
 	{
 		this.value = value;
+	}
+
+	public void setValue( PaxosValue value )
+	{
+		this.value = value;
+	}
+
+	public PaxosValue getValue()
+	{
+		return value;
 	}
 }
 

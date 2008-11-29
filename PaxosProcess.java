@@ -23,28 +23,11 @@ public class PaxosProcess
 							continue;
 
 						ClientMessage msg = (ClientMessage)message;
-						switch( msg.getType() )
+						PaxosMessage reply = stateMachine.processClientMessage( msg );
+						for ( int i = 0; i < ports.length; i += 1 )
 						{
-							case NONE:
-							{
-								break;
-							}
-							case ADD:
-							{
-								break;
-							}
-							case EDIT:
-							{
-								break;
-							}
-							case DELETE:
-							{
-								break;
-							}
-							case READ:
-							{
-								break;
-							}
+							reply.setAddress( "localhost", ports[i] );
+							communicator.send( reply );
 						}
 						continue;
 					}
@@ -126,6 +109,8 @@ public class PaxosProcess
 	
 	private PaxosProcessActor processAct = null;
 
+	private PaxosSM stateMachine = null;
+
 	private int port = -1;
 
 	private int[] ports = null;
@@ -141,6 +126,7 @@ public class PaxosProcess
 	public PaxosProcess( int port, int[] ports )
 	{
 		communicator = new Communicator( port );
+		stateMachine = new PaxosSM();
 		this.port = port;
 		this.ports = ports.clone();
 		if ( ports.length >= 1 )
@@ -156,6 +142,7 @@ public class PaxosProcess
 				return;
 
 			communicator.start();
+			communicator.clear();
 
 			processComm = new PaxosProcessComm();
 			processComm.start();

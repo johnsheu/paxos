@@ -5,7 +5,7 @@ import java.nio.channels.ClosedByInterruptException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * A class which handles asynchronous socket I/O.  This class sends and
@@ -40,7 +40,7 @@ public class Communicator
 				//  Wait for message to send
 				try
 				{
-					message = senderQueue.take();
+					message = senderDeque.take();
 				}
 				catch ( InterruptedException ex )
 				{
@@ -63,7 +63,7 @@ public class Communicator
 					ErrorMessage emessage = new ErrorMessage();
 					emessage.setAddress( message.getAddress() );
 					emessage.setError( ex.toString() );
-					receiverQueue.offer( emessage );
+					receiverDeque.offer( emessage );
 				}
 				finally
 				{
@@ -137,7 +137,7 @@ public class Communicator
 					ObjectInputStream oos =
 						new ObjectInputStream( socket.getInputStream() );
 					Object o = oos.readObject();
-					receiverQueue.offer( (Message)o );
+					receiverDeque.offer( (Message)o );
 				}
 				catch ( IOException ex )
 				{
@@ -166,10 +166,10 @@ public class Communicator
 	int port = -1;
 
 	//  Message receive queue
-	LinkedBlockingQueue<Message> receiverQueue = null;
+	LinkedBlockingDeque<Message> receiverDeque = null;
 
 	//  Message send queue
-	LinkedBlockingQueue<Message> senderQueue = null;
+	LinkedBlockingDeque<Message> senderDeque = null;
 
 	//  Message receive thread
 	ReceiverThread receiver = null;
@@ -180,8 +180,8 @@ public class Communicator
 	public Communicator( int port )
 	{
 		this.port = port;
-		receiverQueue = new LinkedBlockingQueue<Message>();
-		senderQueue = new LinkedBlockingQueue<Message>();
+		receiverDeque = new LinkedBlockingDeque<Message>();
+		senderDeque = new LinkedBlockingDeque<Message>();
 	}
 
 	/**
@@ -194,7 +194,7 @@ public class Communicator
 	 */
 	public void sendMessage( Message message )
 	{
-		senderQueue.offer( message );
+		senderDeque.offer( message );
 	}
 
 	/**
@@ -207,7 +207,7 @@ public class Communicator
 	 */
 	public Message readMessage()
 	{
-		return receiverQueue.poll();
+		return receiverDeque.poll();
 	}
 
 	/**
@@ -221,7 +221,7 @@ public class Communicator
 	 */
 	public Message readMessageBlocking() throws InterruptedException
 	{
-		return receiverQueue.take();
+		return receiverDeque.take();
 	}
 
 	/**
@@ -234,7 +234,7 @@ public class Communicator
 	 */
 	public Message peekMessage()
 	{
-		return receiverQueue.peek();
+		return receiverDeque.peek();
 	}
 
 	/**
@@ -293,6 +293,15 @@ public class Communicator
 	public synchronized boolean isStarted()
 	{
 		return receiver != null;
+	}
+
+	/**
+	 * Clears all send/receive queues for this <code>Communicator</code>.
+	 */
+	public void clear()
+	{
+		senderDeque.clear();
+		receiverDeque.clear();
 	}
 }
 
