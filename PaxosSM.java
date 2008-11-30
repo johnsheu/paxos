@@ -162,7 +162,6 @@ public class PaxosSM
 		    if( r.getNumPrepareResp( propNum ) > numProcesses / 2 && !r.hasAcceptMajority(propNum))
 		    {
 			r.setHasAcceptMajority( propNum, true );
-			System.out.println( "You should be here" );
 			msg.setType( PaxosMessage.Type.ACC_REQ );
 
 			//KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
