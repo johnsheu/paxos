@@ -18,14 +18,6 @@ public class PaxosSM
 
 	//acceptor variables
 
-    /*	HashMap<Long, PaxosValue> highestProposalAcceptedValueMap = null;
-	HashMap<Long, Long> highestProposalAcceptedMap = null;
-
-	HashMap<Long, Long> highestPrepareRequestMap = null;
-
-	HashMap<Long, HashMap<Long, Long>> numPrepareRespMap = null;
-	HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>> highestPrepareRespMap = null;
-    */
 	ArrayList< PaxosRoundState > rounds = null;
 
 	long numProcesses;
@@ -37,16 +29,6 @@ public class PaxosSM
 	{
 		clear();
 		rounds = new ArrayList< PaxosRoundState >();
-		/*	highestProposalAcceptedValueMap = new HashMap<Long, PaxosValue>();
-		highestProposalAcceptedMap = new HashMap<Long, Long>();
-
-		highestPrepareRequestMap = new HashMap<Long, Long>();
-
-		numPrepareREspMap = new HashMap< Long, HashMap<Long, Long>>();
-		highestPrepareRespMap = new HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>>();
-		
-		prepareResponses = new HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>>();
-		*/
 	}
 
 	public void clear()
@@ -78,6 +60,7 @@ public class PaxosSM
 	{
 		PaxosMessage.Type type = msg.getType();		
 		long propNum = msg.getProposalNumber();
+		PaxosValue value = msg.getValue();
 
 		PaxosRoundState r = rounds.get( msg.getRound().intValue() );
 		if( r == null )
@@ -102,25 +85,34 @@ public class PaxosSM
 
 		    //set new max if necessary
 		    if( msg.getHighestAcceptedNumber().longValue() > r.getHighestPrepareResp( propNum ))
-			r.setHighestPrepareResp( propNum, msg.getHighestAcceptedNumber(), msg.getValue() );
+			r.setHighestPrepareResp( propNum, msg.getHighestAcceptedNumber(), value );
 		    
 		    //if majority has responded, send out accept message
 		    if( r.getNumPrepareResp( propNum ) > numProcesses / 2 + 1 )
-			    msg.setType( PaxosMessage.Type.ACC_REQ );
+		    {
+			msg.setType( PaxosMessage.Type.ACC_REQ );
 
-		    //KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
-		    msg.setValue( r.getHighestPrepareRespValue( propNum ) );
-		    msg.setHighestAcceptedNumber( null );
+			//KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
+			msg.setValue( r.getHighestPrepareRespValue( propNum ) );
+			msg.setHighestAcceptedNumber( null );
+			
+			//send ACC_REQ
+		    }
 		}
 		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
 		{
 		    r.highestProposalAccepted =  msg.getProposalNumber();
-		    r.highestProposalAcceptedValue =  msg.getValue();
+		    r.highestProposalAcceptedValue =  value;
 		    msg.setType( PaxosMessage.Type.ACC_INF );
-		    //send message to distinguished learner
+		    //send ACC_INF message to distinguished learner
 		}
 		else if( type == PaxosMessage.Type.ACC_INF )
 		{
+		    r.incrementAcceptInforms( propNum, value );
+		    if( r.getNumAcceptInforms( propNum, value ) > numProcesses / 2 + 1 )
+		    {
+			//choose value for that round
+		    }
 		}
 	}
 

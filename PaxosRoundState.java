@@ -6,68 +6,92 @@ import java.util.TreeMap;
  */
 public class PaxosRoundState
 {
-	public PaxosValue highestProposalAcceptedValue = null;
 	public long highestProposalAccepted = -1L;
-	public long highestPrepareRequest = -1L;
-	public long numPrepareResp = -1L;
-	public HashMap<Long, TreeMap<Long, PaxosValue>> highestPrepareResp = null;
+	public PaxosValue highestProposalAcceptedValue = null;
+
+	public long highestPrepareRequest = -1L;  //The value promised
+
+	public HashMap<Long, Long>       numPrepareResp = null;
+	public HashMap<Long, Long>       highestPrepareResp = null;
+	public HashMap<Long, PaxosValue> highestPrepareRespValue = null;
+
+	public HashMap<Long, HashMap<PaxosValue, Long>> acceptInformsMap = null;
 
 	public void PaxosRoundState()
 	{
-		highestPrepareResp = new HashMap<Long, TreeMap<Long, PaxosValue>>();
+		highestPrepareResp = new HashMap<Long, Long>();
+		highestPrepareRespValue = new HashMap<Long, PaxosValue>();
+		numPrepareResp = new HashMap<Long, Long>();
+		acceptInformsMap = new HashMap<Long, HashMap<PaxosValue, Long>>();
 	}
 
 	public long getNumPrepareResp( long propNum )
         {
-		return -1L;
+		Long ret = numPrepareResp.get( propNum );
+		if( ret == null )
+		{
+			ret = new Long( 0L );
+			numPrepareResp.put( new Long( propNum ), ret);
+		}
+		return ret;
 	}
 
 	public void incrementNumPrepareResp( long propNum )
 	{
-	    /*
-                    HashMap<Long, Long> prepResponses = numPrepareRespMap.get( msg.getRound() );
-                    if( prepResponses == null )
-                    {
-                        prepResponses = new HashMap<Long, Long>();
-                        prepResponses.put( propNum, new Long( 1L ) );
-                        prepareResponses.put( round, prepResponses );
-                    }
-                    else
-                        prepResponses.put( propNum, Long.valueOf( prepResponses.get( propNum ).longValue() + 1L ) );
-	    */
-
+	    
+		Long numPrepResp = numPrepareResp.get( propNum );
+                if( numPrepResp == null )
+			numPrepareResp.put( new Long( propNum ), new Long( 1L ));    
+                else
+			numPrepareResp.put( new Long( propNum ), new Long( numPrepResp.longValue() + 1L ) );
 	}
 
 	public long getHighestPrepareResp( long propNum )
         {
-	    return -1L;
+	    Long l = highestPrepareResp.get( propNum );
+	    if( l == null )
+		return -1;
+	    else
+		return l.longValue();
 	}
 
 	public PaxosValue getHighestPrepareRespValue( long propNum )
         {
-	    return new PaxosValue();
+	    return highestPrepareRespValue.get( propNum );
 	}
 
     
-	public void setHighestPrepareResp( long propNum, long highestPreepareRequest, PaxosValue value )
+	public void setHighestPrepareResp( long propNum, long highestNum, PaxosValue highestValue )
         {
-	    /*
-                    HashMap< Long, TreeMap<Long, PaxosValue>> highestPrepRespMap = highestPrepareRespMap.get( round );
-                    TreeMap<Long, PaxosValue> highestPrepResp;
-                    if( highestPrepRespMap == null )
-                    {
-                        highestPrepRespMap = new HashMap<Long, TreeMap<Long, PaxosValue>>();
-                        highestPrepareRespMap.put( round, highestPrepRespMap );
-                    }
-                    highestPrepResp = highestPrepRespMap.get( propNum );
-                    if( highestPrepResp == null )
-                    {
-                        highestPrepResp = new TreeMap<Long, PaxosValue> ();
-                        highestPrepRespMap.put( propNum, highestPrepResp );
-                    }
+	    Long propN = new Long( propNum );
+	    highestPrepareResp.put( propN, new Long( highestNum ));
+	    highestPrepareRespValue.put( propN, highestValue );
+	}
 
-                    highestPrepResp.put( msg.getHighestAcceptedNumber, msg.getValue() );
-	    */
+	public void incrementAcceptInforms( long propN, PaxosValue value )
+	{
+	    Long propNum = new Long( propN );
+	    HashMap<PaxosValue, Long> acceptInforms = acceptInformsMap.get( propNum );
+	    if( acceptInforms == null )
+	    {
+	        acceptInforms = new HashMap< PaxosValue, Long>();
+		acceptInforms.put( value, new Long( 1 ));
+		acceptInformsMap.put( propNum, acceptInforms );
+	    }
+	    else
+	    {
+		acceptInforms.put( value, new Long( acceptInforms.get( value ).longValue() + 1L ));
+	    }
+	    
+	}
 
+	public long getNumAcceptInforms( long propNum, PaxosValue value)
+	{
+	    HashMap<PaxosValue, Long> acceptInforms = acceptInformsMap.get( new Long( propNum) );
+	    if( acceptInforms == null )
+		return 0L;
+	    else
+		return acceptInforms.get( value ).longValue();
+	
 	}
 }
