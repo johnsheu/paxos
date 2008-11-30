@@ -87,9 +87,13 @@ public class PaxosClient
 				return;
 			}
 			ClientMessage message = new ClientMessage();
-			message.setType( ClientMessage.Type.ADD );
+			PaxosValue value = new PaxosValue( args[1], args[2], PaxosValue.Type.ADD );
+			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
+			System.out.print( reply.toString() + '\n' );
+			if ( reply instanceof ErrorMessage )
+				leaderIndex += 1;
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "edit" ) )
@@ -105,9 +109,13 @@ public class PaxosClient
 				return;
 			}
 			ClientMessage message = new ClientMessage();
-			message.setType( ClientMessage.Type.EDIT );
+			PaxosValue value = new PaxosValue( args[1], args[2], PaxosValue.Type.EDIT );
+			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
+			System.out.print( reply.toString() + '\n' );
+			if ( reply instanceof ErrorMessage )
+				leaderIndex += 1;
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "delete" ) )
@@ -123,16 +131,20 @@ public class PaxosClient
 				return;
 			}
 			ClientMessage message = new ClientMessage();
-			message.setType( ClientMessage.Type.DELETE );
+			PaxosValue value = new PaxosValue( args[1], "", PaxosValue.Type.DELETE );
+			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
+			System.out.print( reply.toString() + '\n' );
+			if ( reply instanceof ErrorMessage )
+				leaderIndex += 1;
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "read" ) )
 		{
 			if ( args.length != 3 )
 			{
-				System.out.print( "add <key>\n" );
+				System.out.print( "read <key>\n" );
 				return;
 			}
 			if ( leaderIndex < 0 )
@@ -141,9 +153,13 @@ public class PaxosClient
 				return;
 			}
 			ClientMessage message = new ClientMessage();
-			message.setType( ClientMessage.Type.READ );
+			PaxosValue value = new PaxosValue( args[1], "", PaxosValue.Type.READ );
+			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
+			System.out.print( reply.toString() + '\n' );
+			if ( reply instanceof ErrorMessage )
+				leaderIndex += 1;
 			return;
 		}
 		else if ( args[0].equalsIgnoreCase( "start" ) )
@@ -187,7 +203,7 @@ public class PaxosClient
 			for ( int i = 0; i < count; i += 1 )
 				ports[i] = port + i + 1;
 			PaxosProcess process = new PaxosProcess( port + 1, ports );
-			process.setLeader( true );
+			process.forceLeader( true );
 			processList.add( process );
 			for ( int i = 1; i < count; i += 1 )
 			{

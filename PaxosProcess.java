@@ -1,4 +1,5 @@
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.BitSet;
 
 public class PaxosProcess
 {
@@ -15,28 +16,44 @@ public class PaxosProcess
 			{
 				try
 				{
+					Thread.yield();
 					Message message = communicator.readMessageBlocking();
 					//  Do whatever the message requests us to do
 					if ( message instanceof ClientMessage )
 					{
-						if ( !isLeader )
+						if ( !( isLeader && canLead ) )
 							continue;
 
 						ClientMessage msg = (ClientMessage)message;
-						PaxosMessage reply = stateMachine.processClientMessage( msg );
-						for ( int i = 0; i < ports.length; i += 1 )
-						{
-							reply.setAddress( "localhost", ports[i] );
-							communicator.send( reply );
-						}
+						stateMachine.processClientMessage( msg );
 						continue;
 					}
 					else if ( message instanceof PaxosMessage )
 					{
 						PaxosMessage msg = (PaxosMessage)message;
+						if ( isLeader && !canLead )
+						{
+							for ( int i = 0; i < ports.length; i += 1 )
+							{
+								if ( ports[i] == message.getAddress().getPort() )
+								{
+									responders.set( i );
+									System.err.println( "port " + port + " received new msg from " + message.getAddress().getPort() );
+									if ( responders.cardinality() > ports.length / 2 )
+									{
+										System.err.println( "port " + port + " can now lead" );
+										canLead = true;
+									}
+									break;
+								}
+							}
+						}
 						if ( leaderIndex >= 0 && leaderIndex < ports.length &&
 							message.getAddress().getPort() == ports[leaderIndex] )
+						{
 							leaderAlive.set( true );
+						}
+						stateMachine.processMessage( msg );
 						continue;
 					}
 					else if ( message instanceof ErrorMessage )
@@ -67,16 +84,13 @@ public class PaxosProcess
 			{
 				try
 				{
+					Thread.yield();
 					if ( isLeader )
 					{
 						//  Send heartbeat messages
-						for ( int i = 0; i < ports.length; i += 1 )
-						{
-							PaxosMessage message = new PaxosMessage();
-							message.setAddress( "localhost", ports[i] );
-							message.setType( PaxosMessage.Type.KEEPALIVE );
-							communicator.sendMessage( message );
-						}
+						PaxosMessage message = new PaxosMessage();
+						message.setType( PaxosMessage.Type.KEEPALIVE );
+						broadcastMessage( message );
 						sleep( sleepTime );
 					}
 					else
@@ -91,6 +105,7 @@ public class PaxosProcess
 								ports[leaderIndex] == port )
 							{
 								setLeader( true );
+								stateMachine.processLeaderElection();
 							}
 						}
 					}
@@ -115,9 +130,13 @@ public class PaxosProcess
 
 	private int[] ports = null;
 
+	private BitSet responders = null;
+
 	private long sleepTime = 250L;
 
 	private boolean isLeader = false;
+
+	private boolean canLead = false;
 
 	private int leaderIndex = -1;
 
@@ -126,11 +145,12 @@ public class PaxosProcess
 	public PaxosProcess( int port, int[] ports )
 	{
 		communicator = new Communicator( port );
-		stateMachine = new PaxosSM();
+		stateMachine = new PaxosSM( this );
 		this.port = port;
 		this.ports = ports.clone();
 		if ( ports.length >= 1 )
 			leaderIndex = 0;
+		responders = new BitSet( ports.length );
 		leaderAlive = new AtomicBoolean( true );
 	}
 
@@ -205,11 +225,34 @@ public class PaxosProcess
 	}
 
 	/*
-	 * START Paxos API
+	 * START PaxosSM interface
 	 */
 
+	public void sendMessage( Message message )
+	{
+		communicator.sendMessage( message );
+	}
+
+	public void broadcastMessage( Message message )
+	{
+		for ( int i = 0; i < ports.length; i += 1 )
+		{
+			Message msg = null;
+			try
+			{
+				msg = message.clone();
+			}
+			catch ( CloneNotSupportedException ex )
+			{
+				ex.printStackTrace();
+			}
+			msg.setAddress( "localhost", ports[i] );
+			communicator.sendMessage( msg );
+		}
+	}
+
 	/*
-	 * END Paxos API
+	 * END PaxosSM interface
 	 */
 
 	public void setSleepTime( long sleepTime )
@@ -225,9 +268,16 @@ public class PaxosProcess
 	public void setLeader( boolean isLeader )
 	{
 		this.isLeader = isLeader;
+		stateMachine.setLeader( isLeader );
 	}
 
-	public boolean getLeader()
+	public void forceLeader( boolean isLeader )
+	{
+		setLeader( isLeader );
+		canLead = isLeader;
+	}
+
+	public boolean isLeader()
 	{
 		return isLeader;
 	}

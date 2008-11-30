@@ -9,7 +9,7 @@ import java.net.InetSocketAddress;
  *
  * @see Communicator
  */
-public abstract class Message implements Serializable
+public abstract class Message implements Serializable, Cloneable
 {
 	//  The address associated with this Message.
 	private InetSocketAddress address = null;
@@ -98,6 +98,15 @@ public abstract class Message implements Serializable
 	public void setAddress( String hostname, int port )
 	{
 		setAddress( new InetSocketAddress( hostname, port ) );
+	}
+
+	public Message clone() throws CloneNotSupportedException
+	{
+		Message copy = (Message)( super.clone() );
+		if ( address != null )
+			copy.address =
+				new InetSocketAddress( address.getAddress(), address.getPort() );
+		return copy;
 	}
 
 	public String toString()

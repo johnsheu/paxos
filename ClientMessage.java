@@ -1,6 +1,6 @@
 import java.io.Serializable;
 
-public class ClientMessage extends Message implements Serializable
+public class ClientMessage extends Message implements Serializable, Cloneable
 {
 	private static final long serialVersionUID = 1L;
 

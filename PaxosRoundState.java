@@ -17,7 +17,7 @@ public class PaxosRoundState
 
 	public HashMap<Long, HashMap<PaxosValue, Long>> acceptInformsMap = null;
 
-	public void PaxosRoundState()
+	public PaxosRoundState()
 	{
 		highestPrepareResp = new HashMap<Long, Long>();
 		highestPrepareRespValue = new HashMap<Long, PaxosValue>();

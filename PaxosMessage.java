@@ -1,12 +1,15 @@
 import java.io.Serializable;
+import java.util.BitSet;
 
-public class PaxosMessage extends Message implements Serializable, Comparable<PaxosMessage>
+public class PaxosMessage extends Message implements Serializable, Cloneable,
+	Comparable<PaxosMessage>
 {
 	private static final long serialVersionUID = 1L;
 
 	public enum Type
 	{
 		NONE,
+		NEWLEADER,
 		KEEPALIVE,
 		PREP_REQ,
 		PREP_RESP,
@@ -15,10 +18,12 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 	}
 
 	private Type type = Type.NONE;
-	private Long proposalNumber = null;
+	private long proposalNumber = -1L;
 	private PaxosValue value = null;
-	private Long highestAcceptedNumber = null;
-	private Long round = null;
+	private long highestAcceptedNumber = -1L;
+	private long round = -1L;
+	private BitSet chosenProposals = null;
+	private long highestRound = -1L;
 
 	public PaxosMessage()
 	{
@@ -35,12 +40,12 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 		this.type = type;
 	}
 
-	public Long getProposalNumber()
+	public long getProposalNumber()
 	{
 		return proposalNumber;
 	}
 
-	public void setProposalNumber( Long n )
+	public void setProposalNumber( long n )
 	{
 		this.proposalNumber = n;
 	}
@@ -55,36 +60,55 @@ public class PaxosMessage extends Message implements Serializable, Comparable<Pa
 		this.value = v;
 	}
 
-	public Long getRound()
+	public long getRound()
 	{
 		return round;
 	}
 
-	public void setRound( Long round )
+	public void setRound( long round )
 	{
 		this.round = round;
 	}
 
-	public Long getHighestAcceptedNumber()
+	public long getHighestRound()
+	{
+		return highestRound;
+	}
+
+	public void setHighestRound( long highestRound )
+	{
+		this.highestRound = highestRound;
+	}
+
+	public long getHighestAcceptedNumber()
 	{
 		return highestAcceptedNumber;
 	}
 
-	public void setHighestAcceptedNumber( Long n )
+	public void setHighestAcceptedNumber( long n )
 	{
 		highestAcceptedNumber = n;
 	}
 
+	public BitSet getChosenProposals()
+	{
+		return chosenProposals;
+	}
+
+	public void setChosenProposals( BitSet chosenProposals )
+	{
+		this.chosenProposals = chosenProposals;
+	}
 
 	public int compareTo( PaxosMessage other )
 	{
-		if( this == other )
+		if ( this == other )
 			return 0;
 
-		else if( this.proposalNumber < other.proposalNumber )
+		else if ( this.proposalNumber < other.proposalNumber )
 			return -1;
 
-		else if( this.proposalNumber > other.proposalNumber )
+		else if ( this.proposalNumber > other.proposalNumber )
 			return 1;
 
 		else 
