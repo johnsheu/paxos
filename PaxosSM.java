@@ -1,5 +1,6 @@
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.TreeMap;
 import java.util.SortedSet;
@@ -25,7 +26,7 @@ public class PaxosSM
 	HashMap<Long, HashMap<Long, Long>> numPrepareRespMap = null;
 	HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>> highestPrepareRespMap = null;
     */
-	HashSet< PaxosRoundState > rounds = null;
+	ArrayList< PaxosRoundState > rounds = null;
 
 	long numProcesses;
 
@@ -35,7 +36,7 @@ public class PaxosSM
 	public PaxosSM()
 	{
 		clear();
-		rounds = new HashSet< PaxosRoundState >();
+		rounds = new ArrayList< PaxosRoundState >();
 		/*	highestProposalAcceptedValueMap = new HashMap<Long, PaxosValue>();
 		highestProposalAcceptedMap = new HashMap<Long, Long>();
 
@@ -76,9 +77,9 @@ public class PaxosSM
 	public void processMessage( PaxosMessage msg )
 	{
 		PaxosMessage.Type type = msg.getType();		
-		Long propNum = msg.getProposalNumber();
+		long propNum = msg.getProposalNumber();
 
-		PaxosRoundState r = rounds.get( msg.getRound() );
+		PaxosRoundState r = rounds.get( msg.getRound().intValue() );
 		if( r == null )
 		{
 		    r = new PaxosRoundState();;
@@ -89,7 +90,7 @@ public class PaxosSM
 		{
 		    msg.setValue( r.highestProposalAcceptedValue );
 		    msg.setHighestAcceptedNumber( r.highestProposalAccepted );
-		    r.setHighestPrepareRequest = propNum;
+		    r.highestPrepareRequest = propNum;
 		    msg.setType( PaxosMessage.Type.PREP_RESP );
 		    //send back msg
 		}
@@ -99,42 +100,12 @@ public class PaxosSM
 		    r.incrementNumPrepareResp( propNum );
 
 
-	     /*
-		    HashMap<Long, Long> prepResponses = numPrepareRespMap.get( msg.getRound() );
-		    if( prepResponses == null )
-		    {
-			prepResponses = new HashMap<Long, Long>();
-			prepResponses.put( propNum, new Long( 1L ) );
-			prepareResponses.put( round, prepResponses );
-		    }
-		    else
-			prepResponses.put( propNum, Long.valueOf( prepResponses.get( propNum ).longValue() + 1L ) );
-	      */
-
 		    //set new max if necessary
-		    if( msg.getHighestPrepareRequest.longValue() > r.highestPrepareResp( propNum ))
-			r.setHighestPrepareResp( propNum, msg.getHighestPrepareRequest(), msg.getValue() );
-
-			    /*
-		    HashMap< Long, TreeMap<Long, PaxosValue>> highestPrepRespMap = highestPrepareRespMap.get( round );
-		    TreeMap<Long, PaxosValue> highestPrepResp;
-		    if( highestPrepRespMap == null )
-		    {
-			highestPrepRespMap = new HashMap<Long, TreeMap<Long, PaxosValue>>();
-			highestPrepareRespMap.put( round, highestPrepRespMap );
-		    }
-		    highestPrepResp = highestPrepRespMap.get( propNum );
-		    if( highestPrepResp == null )
-		    {
-			highestPrepResp = new TreeMap<Long, PaxosValue> ();
-			highestPrepRespMap.put( propNum, highestPrepResp );
-		    }
-		    
-		    highestPrepResp.put( msg.getHighestAcceptedNumber, msg.getValue() );
-			    */
+		    if( msg.getHighestAcceptedNumber().longValue() > r.getHighestPrepareResp( propNum ))
+			r.setHighestPrepareResp( propNum, msg.getHighestAcceptedNumber(), msg.getValue() );
 		    
 		    //if majority has responded, send out accept message
-		    if( r.getNumPrepareResp( propNum ).longValue() > numProcesses / 2 + 1 )
+		    if( r.getNumPrepareResp( propNum ) > numProcesses / 2 + 1 )
 			    msg.setType( PaxosMessage.Type.ACC_REQ );
 
 		    //KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 

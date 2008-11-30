@@ -17,27 +17,57 @@ public class PaxosRoundState
 		highestPrepareResp = new HashMap<Long, TreeMap<Long, PaxosValue>>();
 	}
 
-	public long getNumPrepareResp( Long propNum )
+	public long getNumPrepareResp( long propNum )
         {
 		return -1L;
 	}
 
-	public void incrementNumPrepareResp( Long propNum )
+	public void incrementNumPrepareResp( long propNum )
 	{
+	    /*
+                    HashMap<Long, Long> prepResponses = numPrepareRespMap.get( msg.getRound() );
+                    if( prepResponses == null )
+                    {
+                        prepResponses = new HashMap<Long, Long>();
+                        prepResponses.put( propNum, new Long( 1L ) );
+                        prepareResponses.put( round, prepResponses );
+                    }
+                    else
+                        prepResponses.put( propNum, Long.valueOf( prepResponses.get( propNum ).longValue() + 1L ) );
+	    */
+
 	}
 
-	public Long getHighestPrepareResp( Long propNum )
+	public long getHighestPrepareResp( long propNum )
         {
-	    return new Long( -1L );
+	    return -1L;
 	}
 
-	public PaxosValue getHighestPrepareRespValue( Long propNum )
+	public PaxosValue getHighestPrepareRespValue( long propNum )
         {
 	    return new PaxosValue();
 	}
 
     
-	public void setHighestPrepareResp( Long propNum, Long highestPreepareRequest, PaxosValue value )
+	public void setHighestPrepareResp( long propNum, long highestPreepareRequest, PaxosValue value )
         {
+	    /*
+                    HashMap< Long, TreeMap<Long, PaxosValue>> highestPrepRespMap = highestPrepareRespMap.get( round );
+                    TreeMap<Long, PaxosValue> highestPrepResp;
+                    if( highestPrepRespMap == null )
+                    {
+                        highestPrepRespMap = new HashMap<Long, TreeMap<Long, PaxosValue>>();
+                        highestPrepareRespMap.put( round, highestPrepRespMap );
+                    }
+                    highestPrepResp = highestPrepRespMap.get( propNum );
+                    if( highestPrepResp == null )
+                    {
+                        highestPrepResp = new TreeMap<Long, PaxosValue> ();
+                        highestPrepRespMap.put( propNum, highestPrepResp );
+                    }
+
+                    highestPrepResp.put( msg.getHighestAcceptedNumber, msg.getValue() );
+	    */
+
 	}
 }
