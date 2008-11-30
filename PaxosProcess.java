@@ -148,6 +148,7 @@ public class PaxosProcess
 		this.ports = ports.clone();
 		if ( ports.length >= 1 )
 			leaderIndex = 0;
+		stateMachine.setNumProcesses( ports.length );
 		responders = new BitSet( ports.length );
 		leaderAlive = new AtomicBoolean( true );
 	}

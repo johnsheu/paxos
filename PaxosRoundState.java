@@ -11,6 +11,8 @@ public class PaxosRoundState
 
 	public long highestPrepareRequest = -1L;  //The value promised
 
+	public HashMap<Long, Boolean> hasAcceptMajority = null;
+
 	public HashMap<Long, Long>       numPrepareResp = null;
 	public HashMap<Long, Long>       highestPrepareResp = null;
 	public HashMap<Long, PaxosValue> highestPrepareRespValue = null;
@@ -23,6 +25,7 @@ public class PaxosRoundState
 		highestPrepareRespValue = new HashMap<Long, PaxosValue>();
 		numPrepareResp = new HashMap<Long, Long>();
 		acceptInformsMap = new HashMap<Long, HashMap<PaxosValue, Long>>();
+		hasAcceptMajority = new HashMap<Long, Boolean>();
 	}
 
 	public long getNumPrepareResp( long propNum )
@@ -93,5 +96,18 @@ public class PaxosRoundState
 	    else
 		return acceptInforms.get( value ).longValue();
 	
+	}
+
+	public void setHasAcceptMajority( long propNum, boolean majority )
+	{
+	    hasAcceptMajority.put( new Long( propNum ), new Boolean( majority ));
+	}
+
+	public boolean hasAcceptMajority( long propNum )
+	{
+		Boolean b = hasAcceptMajority.get( propNum );
+		if( b == null )
+			return false;
+		return b.booleanValue();
 	}
 }

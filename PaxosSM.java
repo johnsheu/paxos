@@ -22,33 +22,17 @@ public class PaxosSM
 
 	private BitSet chosenProposals = null;
 
-	//proposer variables
-
-	//acceptor variables
-
-	ArrayList< PaxosRoundState > rounds = null;
+	HashMap<Long, PaxosRoundState > rounds = null;
 
 	long numProcesses;
 
-
-	//learner variables
 	
 	public PaxosSM( PaxosProcess process )
 	{
 		clear();
-		rounds = new ArrayList< PaxosRoundState >();
+		rounds = new HashMap<Long, PaxosRoundState >();
 		chosenProposals = new BitSet();
 		this.process = process;
-		/*	highestProposalAcceptedValueMap = new HashMap<Long, PaxosValue>();
-		highestProposalAcceptedMap = new HashMap<Long, Long>();
-
-		highestPrepareRequestMap = new HashMap<Long, Long>();
-
-		numPrepareREspMap = new HashMap< Long, HashMap<Long, Long>>();
-		highestPrepareRespMap = new HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>>();
-		
-		prepareResponses = new HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>>();
-		*/
 	}
 
 	public void clear()
@@ -84,6 +68,11 @@ public class PaxosSM
 	public void sendPrepareRequest( Long n)
 	{
 	}
+
+    public void setNumProcesses( int num )
+    {
+	numProcesses = num;
+    }
 
 	public void processLeaderElection()
 	{
@@ -139,16 +128,17 @@ public class PaxosSM
 
 		if ( roundNum < 0 )
 			return;
-		
-		PaxosRoundState r = rounds.get( (int)msg.getRound() );
+
+		PaxosRoundState r = rounds.get( new Long(msg.getRound()) );
 		if( r == null )
 		{
 		    r = new PaxosRoundState();;
-		    rounds.add( r );
+		    rounds.put( new Long( msg.getRound()), r );
 		}
 
 		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
 		{
+		    System.err.println( "PRE_PREQ" );
 		    msg.setValue( r.highestProposalAcceptedValue );
 		    msg.setHighestAcceptedNumber( r.highestProposalAccepted );
 		    r.highestPrepareRequest = propNum;
@@ -158,7 +148,7 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.PREP_RESP )
 		{
-			System.out.println( "foo" );
+			System.out.println( "PREP_RESP" );
 		    //process Paxos Message
 		    r.incrementNumPrepareResp( propNum );
 
@@ -168,8 +158,11 @@ public class PaxosSM
 			r.setHighestPrepareResp( propNum, msg.getHighestAcceptedNumber(), value );
 		    
 		    //if majority has responded, send out accept message
-		    if( r.getNumPrepareResp( propNum ) > numProcesses / 2 + 1 )
+		    System.out.println( "Num Prepare Responses " + r.getNumPrepareResp( propNum ));
+		    if( r.getNumPrepareResp( propNum ) > numProcesses / 2 && !r.hasAcceptMajority(propNum))
 		    {
+			r.setHasAcceptMajority( propNum, true );
+			System.out.println( "You should be here" );
 			msg.setType( PaxosMessage.Type.ACC_REQ );
 
 			//KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
@@ -177,11 +170,12 @@ public class PaxosSM
 			msg.setHighestAcceptedNumber( -1L );
 			
 			//send ACC_REQ
-			process.sendMessage( msg );
+			process.broadcastMessage( msg );
 		    }
 		}
-		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
+		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() >= r.highestPrepareRequest )
 		{
+		    System.err.println( "ACC_REQ" );
 		    r.highestProposalAccepted =  msg.getProposalNumber();
 		    r.highestProposalAcceptedValue =  value;
 		    msg.setType( PaxosMessage.Type.ACC_INF );
@@ -190,6 +184,7 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.ACC_INF )
 		{
+		    System.err.println( "ACC_INF" );
 		    r.incrementAcceptInforms( propNum, value );
 		    if( (r.getNumAcceptInforms( propNum, value ) > numProcesses / 2 + 1)  && leader )
 		    {
