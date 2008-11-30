@@ -152,7 +152,7 @@ public class PaxosSM
 		    //process Paxos Message
 		    r.incrementNumPrepareResp( propNum );
 
-
+ 
 		    //set new max if necessary
 		    if( msg.getHighestAcceptedNumber() > r.getHighestPrepareResp( propNum ))
 			r.setHighestPrepareResp( propNum, msg.getHighestAcceptedNumber(), value );
@@ -179,9 +179,9 @@ public class PaxosSM
 		else if( type == PaxosMessage.Type.ACC_INF )
 		{
 		    r.incrementAcceptInforms( propNum, value );
-		    if( r.getNumAcceptInforms( propNum, value ) > numProcesses / 2 + 1 )
+		    if( (r.getNumAcceptInforms( propNum, value ) > numProcesses / 2 + 1)  && leader )
 		    {
-			//choose value for that round
+			//inform client
 		    }
 		}
 	}
