@@ -16,13 +16,16 @@ public class PaxosSM
 	//proposer variables
 
 	//acceptor variables
-	HashMap<Long, PaxosValue> highestProposalAcceptedValueMap = null;
+
+    /*	HashMap<Long, PaxosValue> highestProposalAcceptedValueMap = null;
 	HashMap<Long, Long> highestProposalAcceptedMap = null;
 
 	HashMap<Long, Long> highestPrepareRequestMap = null;
 
 	HashMap<Long, HashMap<Long, Long>> numPrepareRespMap = null;
 	HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>> highestPrepareRespMap = null;
+    */
+	HashSet< PaxosRoundState > rounds = null;
 
 	long numProcesses;
 
@@ -32,12 +35,17 @@ public class PaxosSM
 	public PaxosSM()
 	{
 		clear();
-		highestProposalAcceptedValueMap = new HashMap<Long, PaxosValue>();
+		rounds = new HashSet< PaxosRoundState >();
+		/*	highestProposalAcceptedValueMap = new HashMap<Long, PaxosValue>();
 		highestProposalAcceptedMap = new HashMap<Long, Long>();
 
-		highestPrepareRespMap = new HashMap<Long, Long>();
+		highestPrepareRequestMap = new HashMap<Long, Long>();
+
+		numPrepareREspMap = new HashMap< Long, HashMap<Long, Long>>();
+		highestPrepareRespMap = new HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>>();
 		
-		prepareResponses = new HashMap<Long, HashMap<Long, TreeSet<PaxosValue>>();
+		prepareResponses = new HashMap<Long, HashMap<Long, TreeMap<Long, PaxosValue>>>();
+		*/
 	}
 
 	public void clear()
@@ -68,22 +76,30 @@ public class PaxosSM
 	public void processMessage( PaxosMessage msg )
 	{
 		PaxosMessage.Type type = msg.getType();		
-		Long round = msg.getRound();
 		Long propNum = msg.getProposalNumber();
 
-		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > highestPrepareRespMap.get( round ) )
+		PaxosRoundState r = rounds.get( msg.getRound() );
+		if( r == null )
 		{
-		    msg.setValue( highestProposalAcceptedValueMap.get( round ));
-		    msg.setHighestAcceptedNumber( highestProposalAcceptedMap.get( round ));
-		    ///WHAT??? does this work????
-		    highestPrepareRespMap.put( round, propNum );
+		    r = new PaxosRoundState();;
+		    rounds.add( r );
+		}
+
+		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
+		{
+		    msg.setValue( r.highestProposalAcceptedValue );
+		    msg.setHighestAcceptedNumber( r.highestProposalAccepted );
+		    r.setHighestPrepareRequest = propNum;
 		    msg.setType( PaxosMessage.Type.PREP_RESP );
 		    //send back msg
 		}
 		else if( type == PaxosMessage.Type.PREP_RESP )
 		{
 		    //process Paxos Message
+		    r.incrementNumPrepareResp( propNum );
 
+
+	     /*
 		    HashMap<Long, Long> prepResponses = numPrepareRespMap.get( msg.getRound() );
 		    if( prepResponses == null )
 		    {
@@ -93,8 +109,13 @@ public class PaxosSM
 		    }
 		    else
 			prepResponses.put( propNum, Long.valueOf( prepResponses.get( propNum ).longValue() + 1L ) );
+	      */
 
 		    //set new max if necessary
+		    if( msg.getHighestPrepareRequest.longValue() > r.highestPrepareResp( propNum ))
+			r.setHighestPrepareResp( propNum, msg.getHighestPrepareRequest(), msg.getValue() );
+
+			    /*
 		    HashMap< Long, TreeMap<Long, PaxosValue>> highestPrepRespMap = highestPrepareRespMap.get( round );
 		    TreeMap<Long, PaxosValue> highestPrepResp;
 		    if( highestPrepRespMap == null )
@@ -110,18 +131,20 @@ public class PaxosSM
 		    }
 		    
 		    highestPrepResp.put( msg.getHighestAcceptedNumber, msg.getValue() );
-		    
+			    */
 		    
 		    //if majority has responded, send out accept message
-		    msg.setType( PaxosMessage.Type.ACC_REQ );
-		    //if there is a max value, set it so that, otherwise pick a response 
-		    //msg.setValue( 
-		    msg.highestAcceptedNumber = nul;
+		    if( r.getNumPrepareResp( propNum ).longValue() > numProcesses / 2 + 1 )
+			    msg.setType( PaxosMessage.Type.ACC_REQ );
+
+		    //KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
+		    msg.setValue( r.getHighestPrepareRespValue( propNum ) );
+		    msg.setHighestAcceptedNumber( null );
 		}
-		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > highestPrepareRespMap.get(round) )
+		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
 		{
-		    highestProposalAcceptedMap.put( round, msg.getProposalNumber() );
-		    highestProposalAcceptedValueMap.put( round, msg.getValue() );
+		    r.highestProposalAccepted =  msg.getProposalNumber();
+		    r.highestProposalAcceptedValue =  msg.getValue();
 		    msg.setType( PaxosMessage.Type.ACC_INF );
 		    //send message to distinguished learner
 		}

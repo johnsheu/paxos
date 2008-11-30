@@ -16,5 +16,28 @@ public class PaxosRoundState
 	{
 		highestPrepareResp = new HashMap<Long, TreeMap<Long, PaxosValue>>();
 	}
-}
 
+	public long getNumPrepareResp( Long propNum )
+        {
+		return -1L;
+	}
+
+	public void incrementNumPrepareResp( Long propNum )
+	{
+	}
+
+	public Long getHighestPrepareResp( Long propNum )
+        {
+	    return new Long( -1L );
+	}
+
+	public PaxosValue getHighestPrepareRespValue( Long propNum )
+        {
+	    return new PaxosValue();
+	}
+
+    
+	public void setHighestPrepareResp( Long propNum, Long highestPreepareRequest, PaxosValue value )
+        {
+	}
+}
