@@ -287,7 +287,8 @@ public class PaxosProcess
 			"PaxosProcess (:" + port + "):\n" +
 			"* alive: " + isStarted() + '\n' +
 			"* sleepTime: " + sleepTime + '\n' +
-			"* isLeader: " + isLeader + '\n';
+			"* isLeader: " + isLeader + '\n' +
+			"* state:\n" + stateMachine.dump() + '\n';
 	}
 }
 

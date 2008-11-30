@@ -66,5 +66,10 @@ public class PaxosValue implements Serializable
 	{
 		return type;
 	}
+
+	public String toString()
+	{
+		return "<" + type + ", k:\"" + key + "\", v:\"" + value + "\">";
+	}
 }
 

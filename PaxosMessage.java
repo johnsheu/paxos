@@ -15,6 +15,7 @@ public class PaxosMessage extends Message implements Serializable, Cloneable,
 		PREP_RESP,
 		ACC_REQ,
 		ACC_INF,
+		ACC_CAST,
 	}
 
 	private Type type = Type.NONE;

@@ -61,8 +61,19 @@ public class PaxosSM
 
 	public String dump()
 	{
-
-	    return new String();
+		StringBuilder builder = new StringBuilder();
+		builder.append( "{ " );
+		long index = 0;
+		PaxosRoundState state = null;
+		while ( ( state = rounds.get( index ) ) != null )
+		{
+			builder.append( "[" + index++ );
+			builder.append( " (" + state.accepted + ") " );
+			builder.append( state.highestProposalAcceptedValue );
+			builder.append( "] " );
+		}
+		builder.append( "}" );
+		return builder.toString();
 	}
 
 	public void sendPrepareRequest( Long n)
@@ -158,7 +169,6 @@ public class PaxosSM
 			r.setHighestPrepareResp( propNum, msg.getHighestAcceptedNumber(), value );
 		    
 		    //if majority has responded, send out accept message
-		    System.out.println( "Num Prepare Responses " + r.getNumPrepareResp( propNum ));
 		    if( r.getNumPrepareResp( propNum ) > numProcesses / 2 && !r.hasAcceptMajority(propNum))
 		    {
 			r.setHasAcceptMajority( propNum, true );
@@ -187,8 +197,15 @@ public class PaxosSM
 		    r.incrementAcceptInforms( propNum, value );
 		    if( (r.getNumAcceptInforms( propNum, value ) > numProcesses / 2 + 1)  && leader )
 		    {
-			//inform client
+				//inform client
+				msg.setType( PaxosMessage.Type.ACC_CAST );
+				process.broadcastMessage( msg );
 		    }
+		}
+		else if ( type == PaxosMessage.Type.ACC_CAST )
+		{
+			r.accepted = true;
 		}
 	}
 }
+
