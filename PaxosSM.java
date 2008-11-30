@@ -98,7 +98,7 @@ public class PaxosSM
 		PaxosMessage reply = new PaxosMessage();
 		reply.setType( PaxosMessage.Type.PREP_REQ );
 		reply.setRound( nextRoundNum++ );
-		reply.setProposalNumber( uniqueID );
+		reply.setProposalNumber( 0L );
 		reply.setValue( msg.getValue() );
 		process.broadcastMessage( reply );
 	}
@@ -118,11 +118,16 @@ public class PaxosSM
 				reply.setValue( r.highestProposalAcceptedValue );
 				reply.setHighestAcceptedNumber( r.highestProposalAccepted );
 				reply.setType( PaxosMessage.Type.PREP_RESP );
-				reply.setHighestRound( nextRoundNum - 1 );
+				reply.setRound( index );
 				reply.setAddress( msg.getAddress() );
 				process.sendMessage( reply );
 				index = proposals.nextClearBit( index + 1 );
 			}
+			PaxosMessage round = new PaxosMessage();
+			round.setType( PaxosMessage.Type.KEEPALIVE );
+			round.setRound( nextRoundNum - 1 );
+			round.setAddress( msg.getAddress() );
+			process.sendMessage( round );
 			return;
 		}
 
@@ -132,6 +137,9 @@ public class PaxosSM
 			nextRoundNum = roundNum + 1;
 		PaxosValue value = msg.getValue();
 
+		if ( roundNum < 0 )
+			return;
+		
 		PaxosRoundState r = rounds.get( (int)msg.getRound() );
 		if( r == null )
 		{
@@ -146,9 +154,11 @@ public class PaxosSM
 		    r.highestPrepareRequest = propNum;
 		    msg.setType( PaxosMessage.Type.PREP_RESP );
 		    //send back msg
+			process.sendMessage( msg );
 		}
 		else if( type == PaxosMessage.Type.PREP_RESP )
 		{
+			System.out.println( "foo" );
 		    //process Paxos Message
 		    r.incrementNumPrepareResp( propNum );
 
@@ -167,6 +177,7 @@ public class PaxosSM
 			msg.setHighestAcceptedNumber( -1L );
 			
 			//send ACC_REQ
+			process.sendMessage( msg );
 		    }
 		}
 		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
@@ -175,6 +186,7 @@ public class PaxosSM
 		    r.highestProposalAcceptedValue =  value;
 		    msg.setType( PaxosMessage.Type.ACC_INF );
 		    //send ACC_INF message to distinguished learner
+			process.sendMessage( msg );
 		}
 		else if( type == PaxosMessage.Type.ACC_INF )
 		{

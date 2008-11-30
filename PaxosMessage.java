@@ -23,7 +23,6 @@ public class PaxosMessage extends Message implements Serializable, Cloneable,
 	private long highestAcceptedNumber = -1L;
 	private long round = -1L;
 	private BitSet chosenProposals = null;
-	private long highestRound = -1L;
 
 	public PaxosMessage()
 	{
@@ -68,16 +67,6 @@ public class PaxosMessage extends Message implements Serializable, Cloneable,
 	public void setRound( long round )
 	{
 		this.round = round;
-	}
-
-	public long getHighestRound()
-	{
-		return highestRound;
-	}
-
-	public void setHighestRound( long highestRound )
-	{
-		this.highestRound = highestRound;
 	}
 
 	public long getHighestAcceptedNumber()

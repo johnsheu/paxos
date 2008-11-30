@@ -38,10 +38,8 @@ public class PaxosProcess
 								if ( ports[i] == message.getAddress().getPort() )
 								{
 									responders.set( i );
-									System.err.println( "port " + port + " received new msg from " + message.getAddress().getPort() );
 									if ( responders.cardinality() > ports.length / 2 )
 									{
-										System.err.println( "port " + port + " can now lead" );
 										canLead = true;
 									}
 									break;
