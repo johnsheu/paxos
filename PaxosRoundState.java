@@ -87,7 +87,10 @@ public class PaxosRoundState
 	    }
 	    else
 	    {
-		acceptInforms.put( value, new Long( acceptInforms.get( value ).longValue() + 1L ));
+		Long l = acceptInforms.get( value );
+		if( l == null )
+		    l = new Long( 0L );
+		acceptInforms.put( value, new Long( l.longValue() + 1L ));
 	    }
 	    
 	}
