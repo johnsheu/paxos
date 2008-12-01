@@ -99,9 +99,13 @@ public class PaxosRoundState
 	{
 	    HashMap<PaxosValue, Long> acceptInforms = acceptInformsMap.get( new Long( propNum) );
 	    if( acceptInforms == null )
+		{
 		return 0L;
+		}
 	    else
+		{
 		return acceptInforms.get( value ).longValue();
+		}
 	
 	}
 

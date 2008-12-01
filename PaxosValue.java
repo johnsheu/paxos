@@ -71,5 +71,17 @@ public class PaxosValue implements Serializable
 	{
 		return "<" + type + ", k:\"" + key + "\", v:\"" + value + "\">";
 	}
+
+	public int hashCode()
+	{
+		return type.hashCode() ^ key.hashCode() ^ value.hashCode();
+	}
+
+	public boolean equals( Object obj )
+	{
+		PaxosValue other = (PaxosValue)obj;
+		return other.key.equals( key ) && other.value.equals( value ) &&
+			other.type == type;
+	}
 }
 

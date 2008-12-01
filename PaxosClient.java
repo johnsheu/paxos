@@ -67,6 +67,11 @@ public class PaxosClient
 			//  Comment
 			return;
 
+		leaderIndex = -1;
+		for ( int i = 0; i < processList.size(); i += 1 )
+			if ( processList.get( i ).isLeader() )
+				leaderIndex = i;
+
 		if ( args[0].equalsIgnoreCase( "clear" ) )
 		{
 			char esc = 27;
@@ -91,9 +96,9 @@ public class PaxosClient
 			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
-			System.out.print( reply.toString() + '\n' );
-			if ( reply instanceof ErrorMessage )
-				leaderIndex += 1;
+//			System.out.print( reply.toString() + '\n' );
+//			if ( reply instanceof ErrorMessage )
+//				leaderIndex += 1;
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "edit" ) )
@@ -113,9 +118,9 @@ public class PaxosClient
 			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
-			System.out.print( reply.toString() + '\n' );
-			if ( reply instanceof ErrorMessage )
-				leaderIndex += 1;
+//			System.out.print( reply.toString() + '\n' );
+//			if ( reply instanceof ErrorMessage )
+//				leaderIndex += 1;
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "delete" ) )
@@ -135,9 +140,9 @@ public class PaxosClient
 			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
-			System.out.print( reply.toString() + '\n' );
-			if ( reply instanceof ErrorMessage )
-				leaderIndex += 1;
+//			System.out.print( reply.toString() + '\n' );
+//			if ( reply instanceof ErrorMessage )
+//				leaderIndex += 1;
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "read" ) )
@@ -157,9 +162,9 @@ public class PaxosClient
 			message.setValue( value );
 			message.setAddress( "localhost", port + leaderIndex + 1 );
 			Message reply = getMessageReply( message );
-			System.out.print( reply.toString() + '\n' );
-			if ( reply instanceof ErrorMessage )
-				leaderIndex += 1;
+//			System.out.print( reply.toString() + '\n' );
+//			if ( reply instanceof ErrorMessage )
+//				leaderIndex += 1;
 			return;
 		}
 		else if ( args[0].equalsIgnoreCase( "start" ) )

@@ -114,9 +114,9 @@ public class PaxosSM
 		{
 			BitSet proposals = msg.getChosenProposals();
 			int index = proposals.nextClearBit( 0 );
-			while ( index < rounds.size() )
+			PaxosRoundState r = null;
+			while ( ( r = rounds.get( index ) ) != null )
 			{
-				PaxosRoundState r = rounds.get( index );
 				PaxosMessage reply = new PaxosMessage();
 				reply.setValue( r.highestProposalAcceptedValue );
 				reply.setHighestAcceptedNumber( r.highestProposalAccepted );
@@ -152,7 +152,7 @@ public class PaxosSM
 
 		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
 		{
-		    System.err.println( "PRE_PREQ" + value );
+		    System.out.println( "PRE_PREQ" + value );
 			if ( r.highestProposalAcceptedValue != null )
 			    msg.setValue( r.highestProposalAcceptedValue );
 		    msg.setHighestAcceptedNumber( r.highestProposalAccepted );
@@ -163,7 +163,7 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.PREP_RESP )
 		{
-			System.err.println( "PREP_RESP" + value );
+			System.out.println( "PREP_RESP" + value );
 		    //process Paxos Message
 		    r.incrementNumPrepareResp( propNum );
 
@@ -191,7 +191,7 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() >= r.highestPrepareRequest )
 		{
-		    System.err.println( "ACC_REQ" + value );
+		    System.out.println( "ACC_REQ" + value );
 		    r.highestProposalAccepted =  msg.getProposalNumber();
 		    r.highestProposalAcceptedValue =  value;
 		    msg.setType( PaxosMessage.Type.ACC_INF );
@@ -200,9 +200,9 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.ACC_INF )
 		{
-		    System.err.println( "ACC_INF" );
+		    System.out.println( "ACC_INF" + value );
 		    r.incrementAcceptInforms( propNum, value );
-		    if( (r.getNumAcceptInforms( propNum, value ) > numProcesses / 2 + 1)  && leader )
+		    if( (r.getNumAcceptInforms( propNum, value ) == numProcesses / 2 + 1)  && leader )
 		    {
 				//inform client
 				msg.setType( PaxosMessage.Type.ACC_CAST );
@@ -211,6 +211,7 @@ public class PaxosSM
 		}
 		else if ( type == PaxosMessage.Type.ACC_CAST )
 		{
+			System.out.println( "ACC_CAST" + value );
 			r.accepted = true;
 		}
 	}
