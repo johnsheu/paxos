@@ -100,6 +100,9 @@ public class PaxosSM
 		reply.setRound( nextRoundNum++ );
 		reply.setProposalNumber( 0L );
 		reply.setValue( msg.getValue() );
+		PaxosRoundState prs = new PaxosRoundState();
+		prs.clientValue = msg.getValue();
+		rounds.put( nextRoundNum, prs );
 		process.broadcastMessage( reply );
 	}
 
@@ -175,7 +178,10 @@ public class PaxosSM
 			msg.setType( PaxosMessage.Type.ACC_REQ );
 
 			//KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
-			msg.setValue( r.getHighestPrepareRespValue( propNum ) );
+			PaxosValue pv = r.getHighestPrepareRespValue( propNum );
+			if( pv == null )
+			    pv = r.clientValue;
+			msg.setValue( pv );
 			msg.setHighestAcceptedNumber( -1L );
 			
 			//send ACC_REQ
