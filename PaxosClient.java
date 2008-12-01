@@ -28,7 +28,7 @@ public class PaxosClient
 	{
 		InetSocketAddress address = message.getAddress();
 		communicator.sendMessage( message );
-		long timeout = System.currentTimeMillis() + 5000L;
+		long timeout = System.currentTimeMillis() + 200L;
 		while ( System.currentTimeMillis() < timeout )
 		{
 			Message reply;

@@ -97,12 +97,12 @@ public class PaxosSM
 	{
 		PaxosMessage reply = new PaxosMessage();
 		reply.setType( PaxosMessage.Type.PREP_REQ );
-		reply.setRound( nextRoundNum++ );
+		reply.setRound( nextRoundNum );
 		reply.setProposalNumber( 0L );
 		reply.setValue( msg.getValue() );
 		PaxosRoundState prs = new PaxosRoundState();
 		prs.clientValue = msg.getValue();
-		rounds.put( nextRoundNum, prs );
+		rounds.put( nextRoundNum++, prs );
 		process.broadcastMessage( reply );
 	}
 
@@ -152,8 +152,9 @@ public class PaxosSM
 
 		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
 		{
-		    System.err.println( "PRE_PREQ" );
-		    msg.setValue( r.highestProposalAcceptedValue );
+		    System.err.println( "PRE_PREQ" + value );
+			if ( r.highestProposalAcceptedValue != null )
+			    msg.setValue( r.highestProposalAcceptedValue );
 		    msg.setHighestAcceptedNumber( r.highestProposalAccepted );
 		    r.highestPrepareRequest = propNum;
 		    msg.setType( PaxosMessage.Type.PREP_RESP );
@@ -162,7 +163,7 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.PREP_RESP )
 		{
-			System.out.println( "PREP_RESP" );
+			System.err.println( "PREP_RESP" + value );
 		    //process Paxos Message
 		    r.incrementNumPrepareResp( propNum );
 
@@ -190,7 +191,7 @@ public class PaxosSM
 		}
 		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() >= r.highestPrepareRequest )
 		{
-		    System.err.println( "ACC_REQ" );
+		    System.err.println( "ACC_REQ" + value );
 		    r.highestProposalAccepted =  msg.getProposalNumber();
 		    r.highestProposalAcceptedValue =  value;
 		    msg.setType( PaxosMessage.Type.ACC_INF );
