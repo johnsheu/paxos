@@ -12,16 +12,13 @@ public class PaxosClient
 
 	private int port = -1;
 
-	private ArrayList<PaxosProcess> processList = null;
-
-	private int leaderIndex = -1;
+	private InetSocketAddress[] addresses = null;
 
 	public PaxosClient( int port )
 	{
 		communicator = new Communicator( port );
 		communicator.start();
 		this.port = port;
-		processList = new ArrayList<PaxosProcess>();
 	}
 
 	private Message getMessageReply( Message message )
@@ -67,11 +64,6 @@ public class PaxosClient
 			//  Comment
 			return;
 
-		leaderIndex = -1;
-		for ( int i = 0; i < processList.size(); i += 1 )
-			if ( processList.get( i ).isLeader() )
-				leaderIndex = i;
-
 		if ( args[0].equalsIgnoreCase( "clear" ) )
 		{
 			char esc = 27;
@@ -86,7 +78,7 @@ public class PaxosClient
 				System.out.print( "add <key> <value>\n" );
 				return;
 			}
-			if ( leaderIndex < 0 )
+			if ( addresses == null )
 			{
 				System.out.print( "error: no PaxosProcess instances started\n" );
 				return;
@@ -94,11 +86,20 @@ public class PaxosClient
 			ClientMessage message = new ClientMessage();
 			PaxosValue value = new PaxosValue( args[1], args[2], PaxosValue.Type.ADD );
 			message.setValue( value );
-			message.setAddress( "localhost", port + leaderIndex + 1 );
-			Message reply = getMessageReply( message );
-//			System.out.print( reply.toString() + '\n' );
-//			if ( reply instanceof ErrorMessage )
-//				leaderIndex += 1;
+			for ( int i = 0; i < addresses.length; i += 1 )
+			{
+				Message msg = null;
+				try
+				{
+					msg = message.clone();
+				}
+				catch ( CloneNotSupportedException ex )
+				{
+					ex.printStackTrace();
+				}
+				msg.setAddress( addresses[i] );
+				communicator.sendMessage( msg );
+			}
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "edit" ) )
@@ -108,7 +109,7 @@ public class PaxosClient
 				System.out.print( "edit <key> <value>\n" );
 				return;
 			}
-			if ( leaderIndex < 0 )
+			if ( addresses == null )
 			{
 				System.out.print( "error: no PaxosProcess instances started\n" );
 				return;
@@ -116,11 +117,20 @@ public class PaxosClient
 			ClientMessage message = new ClientMessage();
 			PaxosValue value = new PaxosValue( args[1], args[2], PaxosValue.Type.EDIT );
 			message.setValue( value );
-			message.setAddress( "localhost", port + leaderIndex + 1 );
-			Message reply = getMessageReply( message );
-//			System.out.print( reply.toString() + '\n' );
-//			if ( reply instanceof ErrorMessage )
-//				leaderIndex += 1;
+			for ( int i = 0; i < addresses.length; i += 1 )
+			{
+				Message msg = null;
+				try
+				{
+					msg = message.clone();
+				}
+				catch ( CloneNotSupportedException ex )
+				{
+					ex.printStackTrace();
+				}
+				msg.setAddress( addresses[i] );
+				communicator.sendMessage( msg );
+			}
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "delete" ) )
@@ -130,7 +140,7 @@ public class PaxosClient
 				System.out.print( "delete <key>>\n" );
 				return;
 			}
-			if ( leaderIndex < 0 )
+			if ( addresses == null )
 			{
 				System.out.print( "error: no PaxosProcess instances started\n" );
 				return;
@@ -138,11 +148,20 @@ public class PaxosClient
 			ClientMessage message = new ClientMessage();
 			PaxosValue value = new PaxosValue( args[1], "", PaxosValue.Type.DELETE );
 			message.setValue( value );
-			message.setAddress( "localhost", port + leaderIndex + 1 );
-			Message reply = getMessageReply( message );
-//			System.out.print( reply.toString() + '\n' );
-//			if ( reply instanceof ErrorMessage )
-//				leaderIndex += 1;
+			for ( int i = 0; i < addresses.length; i += 1 )
+			{
+				Message msg = null;
+				try
+				{
+					msg = message.clone();
+				}
+				catch ( CloneNotSupportedException ex )
+				{
+					ex.printStackTrace();
+				}
+				msg.setAddress( addresses[i] );
+				communicator.sendMessage( msg );
+			}
 			return;
 		}
 		if ( args[0].equalsIgnoreCase( "read" ) )
@@ -152,7 +171,7 @@ public class PaxosClient
 				System.out.print( "read <key>\n" );
 				return;
 			}
-			if ( leaderIndex < 0 )
+			if ( addresses == null )
 			{
 				System.out.print( "error: no PaxosProcess instances started\n" );
 				return;
@@ -160,65 +179,55 @@ public class PaxosClient
 			ClientMessage message = new ClientMessage();
 			PaxosValue value = new PaxosValue( args[1], "", PaxosValue.Type.READ );
 			message.setValue( value );
-			message.setAddress( "localhost", port + leaderIndex + 1 );
-			Message reply = getMessageReply( message );
-//			System.out.print( reply.toString() + '\n' );
-//			if ( reply instanceof ErrorMessage )
-//				leaderIndex += 1;
+			for ( int i = 0; i < addresses.length; i += 1 )
+			{
+				Message msg = null;
+				try
+				{
+					msg = message.clone();
+				}
+				catch ( CloneNotSupportedException ex )
+				{
+					ex.printStackTrace();
+				}
+				msg.setAddress( addresses[i] );
+				communicator.sendMessage( msg );
+			}
 			return;
 		}
 		else if ( args[0].equalsIgnoreCase( "start" ) )
 		{
 			if ( args.length != 2 )
 			{
-				System.out.print( "start <count>\n" );
+				System.out.print( "start <file>\n" );
 				return;
 			}
-			if ( processList.size() > 0 )
+			if ( addresses != null )
 			{
-				for ( int i = 0; i < processList.size(); i += 1 )
-				{
-					processList.get( i ).stop();
-				}
-				processList.clear();
-				leaderIndex = -1;
+				System.err.print( "error: processes already started\n" );
+				return;
 			}
 
-			int count = 0;
-			try
+			addresses = readAddresses( args[1] );
+			if ( addresses == null )
 			{
-				count = Integer.parseInt( args[1] );
-			}
-			catch ( NumberFormatException ex )
-			{
-				ex.printStackTrace();
 				return;
 			}
-			
-			if ( count < 0 )
+			else if ( addresses.length <= 0 )
 			{
-				System.out.print( "error: negative count\n" );
+				System.err.print( "error: no addresses in file\n" );
 				return;
 			}
-			else if ( count == 0 )
-				return;
 
-			leaderIndex = 0;
-			int[] ports = new int[count];
-			for ( int i = 0; i < count; i += 1 )
-				ports[i] = port + i + 1;
-			PaxosProcess process = new PaxosProcess( port + 1, ports );
-			process.forceLeader( true );
-			processList.add( process );
-			for ( int i = 1; i < count; i += 1 )
-			{
-				process = new PaxosProcess( port + i + 1, ports );
-				processList.add( process );
-			}
-			for ( int i = 0; i < count; i += 1 )
-				processList.get( i ).start();
+//			PaxosProcess[] processes = new PaxosProcess[addresses.length];
+//			for ( int i = 0; i < addresses.length; i += 1 )
+//				processes[i] = new PaxosProcess( i, addresses );
+//			processes[0].forceLeader( true );
+//			for ( int i = 0; i < addresses.length; i += 1 )
+//				processes[i].start();
 			return;
 		}
+		/*
 		else if ( args[0].equalsIgnoreCase( "kill" ) )
 		{
 			if ( args.length < 2 )
@@ -240,7 +249,7 @@ public class PaxosClient
 					return;
 				}
 
-				if ( index < 0 || index >= processList.size() )
+				if ( index < 0 || index >= addresses.length )
 				{
 					System.out.print( "error: index out of bounds\n" );
 					return;
@@ -251,6 +260,7 @@ public class PaxosClient
 
 			return;
 		}
+		*/
 		else if ( args[0].equalsIgnoreCase( "source" ) )
 		{
 			if ( args.length != 2 )
@@ -290,6 +300,7 @@ public class PaxosClient
 			}
 			return;
 		}
+		/*
 		else if ( args[0].equalsIgnoreCase( "status" ) )
 		{
 			if ( args.length < 2 )
@@ -360,7 +371,7 @@ public class PaxosClient
 
 			processList.get( index ).setSleepTime( value );
 			return;
-		}
+		}*/
 		else if ( args[0].equalsIgnoreCase( "quit" ) ||
 			args[0].equalsIgnoreCase( "exit" ) )
 		{
@@ -374,14 +385,14 @@ public class PaxosClient
 			System.out.print( " delete\n" );
 			System.out.print( " edit\n" );
 			System.out.print( " exit\n" );
-			System.out.print( " kill\n" );
+//			System.out.print( " kill\n" );
 			System.out.print( " quit\n" );
 			System.out.print( " read\n" );
-			System.out.print( " set_sleeptime\n" );
+//			System.out.print( " set_sleeptime\n" );
 			System.out.print( " sleep\n" );
 			System.out.print( " source\n" );
 			System.out.print( " start\n" );
-			System.out.print( " status\n" );
+//			System.out.print( " status\n" );
 			System.out.print( "Call a command with no arguments for usage info\n" );
 			return;
 		}
@@ -407,6 +418,61 @@ public class PaxosClient
 		{
 			ex.printStackTrace();
 		}
+	}
+
+	private InetSocketAddress[] readAddresses( String name )
+	{
+		ArrayList<InetSocketAddress> addresses = new ArrayList<InetSocketAddress>();
+		int linecount = 1;
+		BufferedReader reader = null;
+		try
+		{
+			reader = new BufferedReader( new FileReader( name ) );
+			String line;
+			while ( ( line = reader.readLine() ) != null )
+			{
+				String[] words = line.split( "\\s+" );
+				if ( words.length != 2 )
+				{
+					System.err.print( "error: file \"" + name + "\", line " + linecount + ":\n" );
+					System.err.print( "       line does not contain address and port\n" );
+					return null;
+				}
+				int port = Integer.parseInt( words[1] );
+				InetSocketAddress address = new InetSocketAddress( words[0], port );
+				addresses.add( address );
+				linecount += 1;
+			}
+		}
+		catch ( FileNotFoundException ex )
+		{
+			ex.printStackTrace();
+			return null;
+		}
+		catch ( IOException ex )
+		{
+			ex.printStackTrace();
+			return null;
+		}
+		catch ( NumberFormatException ex )
+		{
+			System.err.print( "error: file \"" + name + "\", line " + linecount + ":\n" );
+			ex.printStackTrace();
+			return null;
+		}
+		finally
+		{
+			try
+			{
+				reader.close();
+			}
+			catch ( IOException ex )
+			{
+				ex.printStackTrace();
+			}
+		}
+
+		return (InetSocketAddress[])( addresses.toArray() );
 	}
 
 	public static void main( String[] args )
