@@ -472,7 +472,8 @@ public class PaxosClient
 			}
 		}
 
-		return (InetSocketAddress[])( addresses.toArray() );
+		InetSocketAddress[] ret = new InetSocketAddress[addresses.size()];
+		return addresses.toArray( ret );
 	}
 
 	public static void main( String[] args )

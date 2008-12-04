@@ -90,6 +90,7 @@ public class PaxosSM
 		PaxosMessage reply = new PaxosMessage();
 		reply.setType( PaxosMessage.Type.NEWLEADER );
 		reply.setChosenProposals( chosenProposals );
+		reply.setProposalNumber( uniqueID );
 		process.broadcastMessage( reply );
 	}
 
@@ -98,7 +99,7 @@ public class PaxosSM
 		PaxosMessage reply = new PaxosMessage();
 		reply.setType( PaxosMessage.Type.PREP_REQ );
 		reply.setRound( nextRoundNum );
-		reply.setProposalNumber( 0L );
+		reply.setProposalNumber( uniqueID );
 		reply.setValue( msg.getValue() );
 		PaxosRoundState prs = new PaxosRoundState();
 		prs.clientValue = msg.getValue();
@@ -112,14 +113,16 @@ public class PaxosSM
 
 		if ( type == PaxosMessage.Type.NEWLEADER )
 		{
+			System.out.println( "NEWLEADER" );
 			BitSet proposals = msg.getChosenProposals();
 			int index = proposals.nextClearBit( 0 );
 			PaxosRoundState r = null;
-			while ( ( r = rounds.get( index ) ) != null )
+			while ( ( r = rounds.get( new Long( index ) ) ) != null )
 			{
 				PaxosMessage reply = new PaxosMessage();
 				reply.setValue( r.highestProposalAcceptedValue );
 				reply.setHighestAcceptedNumber( r.highestProposalAccepted );
+				reply.setProposalNumber( msg.getProposalNumber() );
 				reply.setType( PaxosMessage.Type.PREP_RESP );
 				reply.setRound( index );
 				reply.setAddress( msg.getAddress() );
@@ -144,15 +147,16 @@ public class PaxosSM
 			return;
 
 		PaxosRoundState r = rounds.get( new Long(msg.getRound()) );
-		if( r == null )
+		if ( r == null )
 		{
-		    r = new PaxosRoundState();;
+		    r = new PaxosRoundState();
+			r.clientValue = new PaxosValue( "", "", PaxosValue.Type.NONE );
 		    rounds.put( new Long( msg.getRound()), r );
 		}
 
-		if( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
+		if ( type == PaxosMessage.Type.PREP_REQ && msg.getProposalNumber() > r.highestPrepareRequest )
 		{
-		    System.out.println( "PRE_PREQ" + value );
+		    System.out.println( "PREP_REQ: " + value );
 			if ( r.highestProposalAcceptedValue != null )
 			    msg.setValue( r.highestProposalAcceptedValue );
 		    msg.setHighestAcceptedNumber( r.highestProposalAccepted );
@@ -161,9 +165,9 @@ public class PaxosSM
 		    //send back msg
 			process.sendMessage( msg );
 		}
-		else if( type == PaxosMessage.Type.PREP_RESP )
+		else if ( type == PaxosMessage.Type.PREP_RESP )
 		{
-			System.out.println( "PREP_RESP" + value );
+			System.out.println( "PREP_RESP: " + value );
 		    //process Paxos Message
 		    r.incrementNumPrepareResp( propNum );
 
@@ -181,26 +185,31 @@ public class PaxosSM
 			//KAREN - need to fix so that it sets the value to a chosen one if getHighestPrepareREsp is null 
 			PaxosValue pv = r.getHighestPrepareRespValue( propNum );
 			if( pv == null )
+			{
 			    pv = r.clientValue;
+			}
 			msg.setValue( pv );
+			long newprop = r.getHighestPrepareResp( propNum );
+			if ( newprop != -1L )
+				msg.setProposalNumber( newprop );
 			msg.setHighestAcceptedNumber( -1L );
 			
 			//send ACC_REQ
 			process.broadcastMessage( msg );
 		    }
 		}
-		else if( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() >= r.highestPrepareRequest )
+		else if ( type == PaxosMessage.Type.ACC_REQ && msg.getProposalNumber() >= r.highestPrepareRequest )
 		{
-		    System.out.println( "ACC_REQ" + value );
+		    System.out.println( "ACC_REQ: " + value );
 		    r.highestProposalAccepted =  msg.getProposalNumber();
 		    r.highestProposalAcceptedValue =  value;
 		    msg.setType( PaxosMessage.Type.ACC_INF );
 		    //send ACC_INF message to distinguished learner
 			process.sendMessage( msg );
 		}
-		else if( type == PaxosMessage.Type.ACC_INF )
+		else if ( type == PaxosMessage.Type.ACC_INF )
 		{
-		    System.out.println( "ACC_INF" + value );
+		    System.out.println( "ACC_INF: " + value );
 		    r.incrementAcceptInforms( propNum, value );
 		    if( (r.getNumAcceptInforms( propNum, value ) == numProcesses / 2 + 1)  && leader )
 		    {
@@ -211,8 +220,9 @@ public class PaxosSM
 		}
 		else if ( type == PaxosMessage.Type.ACC_CAST )
 		{
-			System.out.println( "ACC_CAST" + value );
+			System.out.println( "ACC_CAST: " + value );
 			r.accepted = true;
+			chosenProposals.set( (int)roundNum );
 		}
 	}
 }

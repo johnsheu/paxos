@@ -156,12 +156,13 @@ public class PaxosProcess
 	{
 		this.addresses = addresses.clone();
 		this.address = this.addresses[index];
-		stateMachine.setNumProcesses( addresses.length );
 		responders = new BitSet( addresses.length );
 		leaderAlive = new AtomicBoolean( true );
 
 		communicator = new Communicator( address.getPort() );
 		stateMachine = new PaxosSM( this );
+		stateMachine.setUniqueID( address.getPort() );
+		stateMachine.setNumProcesses( addresses.length );
 	}
 
 	public void start()
@@ -298,6 +299,8 @@ public class PaxosProcess
 
 	public void setLeader( boolean isLeader )
 	{
+		if ( isLeader )
+			System.out.println( "BECOMING LEADER" );
 		this.isLeader = isLeader;
 		stateMachine.setLeader( isLeader );
 	}
@@ -398,7 +401,8 @@ public class PaxosProcess
 			System.exit( 1 );
 		}
 
-		InetSocketAddress[] laddresses = (InetSocketAddress[])( addresses.toArray() );
+		InetSocketAddress[] laddresses = new InetSocketAddress[addresses.size()];
+		laddresses = addresses.toArray( laddresses );
 		PaxosProcess process = new PaxosProcess( index, laddresses );
 		if ( index == 0 )
 			process.forceLeader( true );
@@ -416,10 +420,12 @@ public class PaxosProcess
 				}
 				else if ( line.equalsIgnoreCase( "d1" ) )
 				{
+					System.out.println( "dropping next command before ACC_REQ\n" );
 					process.hackdrop1 = true;
 				}
 				else if ( line.equalsIgnoreCase( "d2" ) )
 				{
+					System.out.println( "dropping next command after ACC_REQ\n" );
 					process.hackdrop2 = true;
 				}
 			}
